@@ -16,7 +16,7 @@ var cors = require('cors');
 mongoose.Promise = require('bluebird');
 
 //authdemo is the name of the db
-mongoose.connect('mongodb://authdemo:authdemo123@localhost/authdemo').then(() => {
+mongoose.connect('mongodb://authdemo:authdemo123@localhost:27017/authdemo').then(() => {
   // if all is ok we will be here
   console.log('******************Start db working');
 }).catch(err => {
