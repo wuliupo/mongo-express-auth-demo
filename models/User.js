@@ -1,18 +1,18 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var bcrypt = require( 'bcrypt-nodejs' );
+var bcrypt = require('bcrypt-nodejs');
 
 var userSchema = new Schema({
-		firstName	: String,
-		lastName	: String,
-		password	: String,
-    salt: String,
-		email:   String,
-		phoneNumber : String,
-		deposits:[{bitcoin: Number, date: Date}],
-		withdrawls:[{bitcoin: Number, date: Date}],
-    created_at: Date,
-    updated_at: Date
+  firstName: String,
+  lastName: String,
+  password: String,
+  salt: String,
+  email:   String,
+  phoneNumber : String,
+  deposits: [{bitcoin: Number, date: Date}],
+  withdrawls: [{bitcoin: Number, date: Date}],
+  created_at: Date,
+  updated_at: Date
 });
 
 // on every save, add the date
@@ -24,8 +24,7 @@ userSchema.pre('save', function(next) {
   this.updated_at = currentDate;
 
   // if created_at doesn't exist, add to that field
-  if (!this.created_at)
-    this.created_at = currentDate;
+  if (!this.created_at) this.created_at = currentDate;
 
   next();
 });
@@ -33,13 +32,13 @@ userSchema.pre('save', function(next) {
 // Execute before each user.save() call
 userSchema.pre( 'save', function ( callback ) {
   var user = this;
-  
+
   // if created_at doesn't exist, add to that field
   if (!user.created_at)
     user.created_at = currentDate;
 
   // Break out if the password hasn't changed
-  if ( !user.isModified( 'password' ) ) return callback();
+  if (!user.isModified('password')) return callback();
 
   // Password changed so we need to hash it
   bcrypt.genSalt( 5, function ( err, salt ) {
@@ -52,10 +51,6 @@ userSchema.pre( 'save', function ( callback ) {
       callback();
     } );
   } );
-} );
-
-
-
-
+});
 // create the model for users and expose it to our app
 module.exports = mongoose.model('users', userSchema);
