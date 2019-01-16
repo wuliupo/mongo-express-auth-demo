@@ -12,17 +12,12 @@ router.get('/', function (req, res, next) {
 router.post('/answers', function (req, res) {
   req.decoded; //{id:34342, username: zprager}
   req.body.answers; //[array]
-  var query = {
-    username: req.decoded.username
-  };
-  User.findOneAndUpdate(query, {
-    answers: req.body.answers
-  }, options, callback)
+  var query = { username: req.decoded.username };
+  User.findOneAndUpdate(query, { answers: req.body.answers }, options, callback)
 });
 
 //with valid login, return token
 router.post('/login', function (req, res) {
-
   if (!req.body.email || !req.body.password) {
     // email address is absolutely necessary for user creation
     res.json({
@@ -33,64 +28,58 @@ router.post('/login', function (req, res) {
     return;
   }
   console.log('attempting login. email: ' + req.body.email);
-  User.findOne({
-      email: req.body.email
-    },
-    function (err, user) {
+  User.findOne({ email: req.body.email }, function (err, user) {
+    if (err) {
+      res.status(204);
+      res.json({
+        success: false,
+        message: 'Error occured while checking if the user exists',
+        data: {
+          error: err
+        }
+      });
+      return;
+    }
+    if (user) {
+      bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
+        if (err) {
+          console.log('error: ' + err);
+          res.json({
+            success: false,
+            message: 'Error occured while checking if the user exists',
+            data: {
+              error: err
+            }
+          });
+          return;
+        }
 
-
-      if (err) {
-        res.status(204);
-        res.json({
-          success: false,
-          message: 'Error occured while checking if the user exists',
-          data: {
-            error: err
-          }
-        });
-        return;
-      }
-      if (user) {
-        bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
-          if (err) {
-            console.log('error: ' + err);
-            res.json({
-              success: false,
-              message: 'Error occured while checking if the user exists',
-              data: {
-                error: err
-              }
-            });
-            return;
-          }
-
-          if (isMatch) {
-
-            var token = jwt.sign({
-              id: user._id,
-              username: user.email
-            }, config.jwt.secret, {
-              expiresIn: 1440 * 1260 * 3600 // expires in 24 hours
-            });
-            res.json({
-              token: token,
-              token_for: req.body.email
-            });
-          } else {
-            res.status(204);
-            res.json({
-              message: 'incorrect password'
-            });
-          }
-        });
-      } else {
-        res.status(200);
-        res.json({
-          message: 'no email found'
-        });
-        return;
-      }
-    }); //end find
+        if (isMatch) {
+          var token = jwt.sign({
+            id: user._id,
+            username: user.email
+          }, config.jwt.secret, {
+            expiresIn: 1440 * 1260 * 3600 // expires in 24 hours
+          });
+          res.json({
+            token: token,
+            token_for: req.body.email
+          });
+        } else {
+          res.status(204);
+          res.json({
+            message: 'incorrect password'
+          });
+        }
+      });
+    } else {
+      res.status(200);
+      res.json({
+        message: 'no email found'
+      });
+      return;
+    }
+  }); //end find
 }); //end login
 
 router.post('/register', function (req, res) {
@@ -104,8 +93,8 @@ router.post('/register', function (req, res) {
     });
     return;
   }
-  // see if users exist with the given userName and/or emailAddress
 
+  // see if users exist with the given userName and/or emailAddress
   User.find({ email: req.body.email }, function (err, foundUsers) {
     if (err) {
       res.status(400);
